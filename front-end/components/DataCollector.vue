@@ -1,7 +1,7 @@
 <template>
-    <b-jumbotron header="Login with Twitter" class="center">
-        <p>Only whitelisted users can use this app</p>
-        <b-button variant="primary" href="#">Login</b-button>
+    <b-jumbotron header="Data collector" class="center">
+        <p>collect</p>
+        <b-button variant="primary" @click="logout()">Logout</b-button>
     </b-jumbotron>
 </template>
 
@@ -13,3 +13,15 @@
   transform: translate(-50%, -50%);
 }
 </style>
+
+<script>
+export default {
+    name: 'LoginWithTwitter',
+    methods: {
+        logout() {
+            localStorage.removeItem("userInfo");
+            window.location.href = "/";
+        }
+    }
+}
+</script>
