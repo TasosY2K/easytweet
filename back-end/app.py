@@ -28,6 +28,10 @@ client = MongoClient(
 
 db = client["locationuk"]
 
+@app.route("/", methods=["GET"])
+def index():
+    return "Works"
+
 @app.route("/req4req", methods=["GET"])
 def req4req():
     request_token = OAuth1Session(
@@ -57,6 +61,7 @@ def req2acc():
     )
     
     data = oauth_token.post("https://api.twitter.com/oauth/access_token", data={"oauth_verifier": payload["oauth_verifier"]})
+    print(data.text)
     oauth_token = str.split(str.split(data.text, "&")[0], "=")[1]
     oauth_token_secret = str.split(str.split(data.text, "&")[1], "=")[1]
     user_id = str.split(str.split(data.text, "&")[2], "=")[1]
@@ -71,4 +76,4 @@ def req2acc():
     }
 
 if __name__ == "__main__":
-    app.run(threaded=True, port=5050, host="0.0.0.0", debug=False)
+    app.run(threaded=True, port=os.getenv("API_PORT"), host="0.0.0.0", debug=True)
