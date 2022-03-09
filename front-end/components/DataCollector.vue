@@ -1,15 +1,13 @@
 <template>
-    <b-jumbotron header="Data collector">
+    <b-jumbotron class="jumbo" header="Data collector">
         <span>Collection name:</span>
-        <b-input v-model="collectionName" type="text"></b-input>
+        <b-input class="border-radius" v-model="collectionName" type="text" @input="validate()" ></b-input>
         <span>Hashtags:</span>
-        <input-tag v-model="hashTags" />
-        <span>Duration start:</span>
-        <date-picker v-model="datetimeStart" />
+        <input-tag class="border-radius" v-model="hashTags" @input="validate()" />
         <span>Duration end:</span>
-        <date-picker v-model="datetimeEnd" />
+        <date-picker class="border-radius" v-model="datetimeEnd" @input="validate()" />
         <br>
-        <b-button variant="primary" @click="startCollecting()">{{ buttonText }}</b-button>
+        <b-button class="border-radius" :disabled="disabled" variant="primary" @click="startCollecting()">{{ buttonText }}</b-button>
     </b-jumbotron>
 </template>
 
@@ -21,27 +19,30 @@ export default {
             buttonText: "Start",
             collectionName: null,
             hashTags: [],
-            datetimeStart: null,
-            datetimeEnd: null
+            datetimeEnd: null,
+            disabled: true,
         }
     },
     methods: {
+        validate() {
+            if (!this.collectionName || !this.datetimeEnd || this.hashTags.length < 0) {
+                this.disabled = true
+            } else {
+                this.disabled = false
+            }
+        },
         async startCollecting() {
-            console.log(this.collectionName);
-            console.log(this.hashTags);
-            console.log(this.datetimeStart);
-            console.log(this.datetimeEnd);
-            
-            const res = await this.$axios.post(`${process.env.apiUrl}/collect`, {
-                collection_name: this.collectionName,
-                hashtags: this.hashTags,
-                datetime_start: this.datetimeStart,
-                datetime_end: this.datetimeEnd
-            });
+            try {
+                const res = await this.$axios.post(`${process.env.apiUrl}/collect`, {
+                    collection_name: this.collectionName,
+                    hashtags: this.hashTags,
+                    datetime_end: this.datetimeEnd
+                });
 
-            console.log(res);
-
-            this.buttonText = "Done"   
+                this.buttonText = res.data;
+            } catch (error) {
+                alert(error)
+            }
         }
     }
 }

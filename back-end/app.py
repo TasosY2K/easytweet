@@ -1,6 +1,7 @@
 import os
 import tweepy
 import json
+import uuid
 import threading
 from flask import Flask, jsonify, request
 from flask_cors import CORS
@@ -9,9 +10,11 @@ from dotenv import load_dotenv
 from requests_oauthlib import OAuth1Session
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
-from collector import StreamListener 
+from collector import StreamListener, RunnningThreads
 
 load_dotenv()
+
+ThreadController = RunnningThreads()
 
 app = Flask(__name__)
 
@@ -27,25 +30,25 @@ client = MongoClient(
     port=int(os.getenv("DB_PORT")), 
     # username=os.getenv("DB_USERNAME"), 
     # password=os.getenv("DB_PASSWORD"), 
-    # authSource=os.getenv("DB_AUTH_DB")
+    authSource=os.getenv("DB_AUTH_DB")
 )
 
 db = client[os.getenv("DB_AUTH_DB")]
 
-def start_stream(collection_name, hashtags, datetime_end):
-    print("Stating stream")
+def start_stream(identity, collection_name, hashtags, datetime_end):
     while True:
         try:
             auth = tweepy.OAuthHandler(os.getenv("OAUTH_TOKEN"), os.getenv("OAUTH_TOKEN_SECRET"))
             auth.set_access_token(os.getenv("ACCESS_TOKEN"), os.getenv("ACCESS_TOKEN_SECRET"))
             
             listener = StreamListener(
+                identity=identity,
                 collection_name=collection_name,
-                datetime_end=datetime_end
+                datetime_end=datetime_end,
+                thread_conrtroller=ThreadController
             )
             
             streamer = tweepy.Stream(auth=auth, listener=listener)
-            print("Tracking: " + str(hashtags))
             streamer.filter(track=hashtags)
         
         except Exception as e:
@@ -55,8 +58,14 @@ def start_stream(collection_name, hashtags, datetime_end):
 
 @app.before_request
 def middlware():
-    print("middleware")
-
+    if "Authorization" in request.headers:
+        server_token = os.getenv("HEADER_SECRET")
+        client_token = request.headers.get("Authorization")
+        print(client_token)
+        if client_token != server_token:
+            return "Incorrect token verification", 401
+    else:
+        return "Incorrect token verification", 401
 
 @app.route("/", methods=["GET"])
 def index():
@@ -111,18 +120,18 @@ def collect():
     body = request.get_json()
     
     if not "collection_name" in body or not "hashtags" in body or not "datetime_end" in body:
-        return "Not enough or wrong arguments", 401 
- 
-    for coll in db.list_collection_names():
-        print(coll)
+        return "Not enough or wrong arguments", 401
 
-    # if body["collection_name"] in db.list_collection_names():
-    #     return "Collection already exists", 401
+    if body["collection_name"] in db.list_collection_names():
+        return "Collection already exists", 401
+
+    identity = str(uuid.uuid4())[:8]
 
     thread = threading.Thread(
         target=start_stream,
         daemon=True,
         args=(
+            identity,
             body["collection_name"], 
             body["hashtags"], 
             body["datetime_end"],
@@ -131,13 +140,32 @@ def collect():
     
     thread.start()
 
-    return "Started collecting"
+    ThreadController.AddThread({
+        "id": identity,
+        "collection_name": body["collection_name"],
+        "hashtags": body["hashtags"],
+        "datetime_end": body["datetime_end"]
+    })
+
+    return "Started collecting..."
 
 
 @app.route("/monitor", methods=["GET"])
 def monitor():
-    return "0"
-   
+    runnning_threads = ThreadController.GetThreads()
+    if len(runnning_threads) > 0:
+        return json.dumps(runnning_threads)
+    else:
+        return "No runnning threads", 401
+
+
+@app.route("/logs", methods=["GET"])
+def logs():
+    f = open(os.getenv("LOG_FILE"), "r")
+    contents = f.read()
+    f.close()
+    return contents
+
 
 if __name__ == "__main__":
     app.run(threaded=False, port=os.getenv("API_PORT"), host="0.0.0.0", debug=os.getenv("DEBUG"))
