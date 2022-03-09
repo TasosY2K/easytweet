@@ -1,4 +1,7 @@
 import os
+import tweepy
+import json
+import threading
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from pymongo import MongoClient
@@ -6,6 +9,7 @@ from dotenv import load_dotenv
 from requests_oauthlib import OAuth1Session
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
+from collector import StreamListener 
 
 load_dotenv()
 
@@ -21,16 +25,43 @@ limiter = Limiter(
 client = MongoClient(
     host=os.getenv("DB_HOST"), 
     port=int(os.getenv("DB_PORT")), 
-    username=os.getenv("DB_USERNAME"), 
-    password=os.getenv("DB_PASSWORD"), 
-    #authSource=os.getenv("DB_AUTH_DB")
+    # username=os.getenv("DB_USERNAME"), 
+    # password=os.getenv("DB_PASSWORD"), 
+    # authSource=os.getenv("DB_AUTH_DB")
 )
 
-db = client["locationuk"]
+db = client[os.getenv("DB_AUTH_DB")]
+
+def start_stream(collection_name, hashtags, datetime_end):
+    print("Stating stream")
+    while True:
+        try:
+            auth = tweepy.OAuthHandler(os.getenv("OAUTH_TOKEN"), os.getenv("OAUTH_TOKEN_SECRET"))
+            auth.set_access_token(os.getenv("ACCESS_TOKEN"), os.getenv("ACCESS_TOKEN_SECRET"))
+            
+            listener = StreamListener(
+                collection_name=collection_name,
+                datetime_end=datetime_end
+            )
+            
+            streamer = tweepy.Stream(auth=auth, listener=listener)
+            print("Tracking: " + str(hashtags))
+            streamer.filter(track=hashtags)
+        
+        except Exception as e:
+            print(e)
+            continue
+
+
+@app.before_request
+def middlware():
+    print("middleware")
+
 
 @app.route("/", methods=["GET"])
 def index():
     return "Works"
+
 
 @app.route("/req4req", methods=["GET"])
 def req4req():
@@ -61,7 +92,6 @@ def req2acc():
     )
     
     data = oauth_token.post("https://api.twitter.com/oauth/access_token", data={"oauth_verifier": payload["oauth_verifier"]})
-    print(data.text)
     oauth_token = str.split(str.split(data.text, "&")[0], "=")[1]
     oauth_token_secret = str.split(str.split(data.text, "&")[1], "=")[1]
     user_id = str.split(str.split(data.text, "&")[2], "=")[1]
@@ -75,5 +105,39 @@ def req2acc():
         "screen_name": screen_name
     }
 
+
+@app.route("/collect", methods=["POST"])
+def collect():
+    body = request.get_json()
+    
+    if not "collection_name" in body or not "hashtags" in body or not "datetime_end" in body:
+        return "Not enough or wrong arguments", 401 
+ 
+    for coll in db.list_collection_names():
+        print(coll)
+
+    # if body["collection_name"] in db.list_collection_names():
+    #     return "Collection already exists", 401
+
+    thread = threading.Thread(
+        target=start_stream,
+        daemon=True,
+        args=(
+            body["collection_name"], 
+            body["hashtags"], 
+            body["datetime_end"],
+        )
+    )
+    
+    thread.start()
+
+    return "Started collecting"
+
+
+@app.route("/monitor", methods=["GET"])
+def monitor():
+    return "0"
+   
+
 if __name__ == "__main__":
-    app.run(threaded=True, port=os.getenv("API_PORT"), host="0.0.0.0", debug=True)
+    app.run(threaded=False, port=os.getenv("API_PORT"), host="0.0.0.0", debug=os.getenv("DEBUG"))

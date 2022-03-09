@@ -1,22 +1,13 @@
 <template>
-    <b-jumbotron header="Login with Twitter" class="center">
+    <b-jumbotron header="Login with Twitter">
         <p>Only whitelisted users can use this app</p>
         <b-button variant="primary" @click="loginWithTwitter()">Login</b-button>
     </b-jumbotron>
 </template>
 
-<style scoped>
-.center {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-}
-</style>
-
 <script>
 export default {
-    name: 'IndexPage',
+    name: 'LoginWithTwitter',
     methods: {
         async loginWithTwitter() {
             const res = await this.$axios.get(`${process.env.apiUrl}/req4req`);
