@@ -1,5 +1,5 @@
 log.txt
-static/
+back-end/static/
 # Created by https://www.toptal.com/developers/gitignore/api/node,vuejs,nuxtjs,flask,python
 # Edit at https://www.toptal.com/developers/gitignore?templates=node,vuejs,nuxtjs,flask,python
 
