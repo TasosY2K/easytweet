@@ -42,20 +42,18 @@ export default {
 
   // Build Configuration: https://go.nuxtjs.dev/config-build
   build: {},
-  
-  buildDir: '../back-end/static',
-  
-  axios: {
-    proxy: true,
-  },
-  // configure your url
-  proxy: {
-    '/api/': {
-      target: process.env.API_URL,
-      pathRewrite: { '^/api/': '' },
-      changeOrigin: true,
-    },
-  },
+    
+  // axios: {
+  //   proxy: true,
+  // },
+  // // configure your url
+  // proxy: {
+  //   '/api/': {
+  //     target: process.env.API_URL,
+  //     pathRewrite: { '^/api/': '' },
+  //     changeOrigin: true,
+  //   },
+  // },
 
   env: {
     apiUrl: process.env.API_URL,
