@@ -46,6 +46,7 @@ class StreamListener(tweepy.StreamListener):
         self.collection_name = collection_name
         self.datetime_end = datetime_end.replace(" ", "-").replace(":", "-")
         self.thread_conrtroller = thread_conrtroller
+        self.index_status = False
 
     def log_to_file(self, content):
         datetm = datetime.datetime.now().strftime("%m-%d-%Y, %H:%M:%S")
@@ -89,7 +90,16 @@ class StreamListener(tweepy.StreamListener):
             # print ("Tweet collected at " + str(dt))
             # if verified == True:
             coll=db[self.collection_name]
+            
             coll.insert_one(datajson)
+
+            if not self.index_status:
+                coll.create_index([('text', pymongo.TEXT)], name='text_index', default_language='english')
+                coll.create_index([('created_at_converted', pymongo.ASCENDING)], name='created_at_index', default_language='english')
+                coll.create_index([('user.id_str', pymongo.ASCENDING)], name='user_index', default_language='english')
+                coll.create_index([('lang', pymongo.ASCENDING)], name='lang_index', default_language='english')
+                self.index_status = True
+
                 # print ('inserted')
             #print a message that the tweet has been inserted into the Db
             #print ('tweet inserted')
