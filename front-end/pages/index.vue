@@ -9,9 +9,9 @@
             <LoginWithTwitter v-if="authenticated == false" />
             <div v-else-if="authenticated" >
               <div class="mb-2">
-                <b-button @click="componentViewHandler('collector')" variant="primary" class="nav-button">Data collection</b-button>
-                <b-button @click="componentViewHandler('monitor')" variant="primary" class="nav-button">Monitor</b-button>
-                <b-button @click="componentViewHandler('logs')" variant="primary" class="nav-button">Logs</b-button>
+                <b-button @click="componentViewHandler('collector')" variant="primary" class="nav-button mr-1">Data collection</b-button>
+                <b-button @click="componentViewHandler('monitor')" variant="primary" class="nav-button mr-1">Monitor</b-button>
+                <b-button @click="componentViewHandler('logs')" variant="primary" class="nav-button mr-1">Logs</b-button>
                 <b-button @click="logout()" class="nav-button" variant="primary">Logout</b-button>
               </div>
               <DataCollector v-if="componentView == 'collector'"/>
@@ -82,7 +82,7 @@ body {
 .footer {
   color: #fff;
   position: absolute;
-  left: 41%;
+  left: 42%;
   bottom: 0;
   height: 60px;
   line-height: 60px;
@@ -107,6 +107,7 @@ export default {
   methods: {
     logout() {
       localStorage.removeItem("userInfo");
+      localStorage.removeItem("secretToken");
       window.location.href = "/";
     },
     componentViewHandler(view) {

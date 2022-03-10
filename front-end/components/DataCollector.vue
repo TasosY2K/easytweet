@@ -32,8 +32,14 @@ export default {
             }
         },
         async startCollecting() {
+            const userInfo = JSON.parse(localStorage.getItem("userInfo"))
+            
             try {
-                const res = await this.$axios.post(`${process.env.apiUrl}/collect`, {
+                this.$axios.setHeader("Token", localStorage.getItem("secretToken"))
+
+                const res = await this.$axios.post(`/api/collect`, {
+                    access_token: userInfo.oauth_token,
+                    access_token_secret: userInfo.oauth_token_secret,
                     collection_name: this.collectionName,
                     hashtags: this.hashTags,
                     datetime_end: this.datetimeEnd

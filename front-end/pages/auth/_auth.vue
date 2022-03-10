@@ -11,7 +11,8 @@ export default {
         const oauthVerifier = this.$route.query.oauth_verifier;
 
         if (oauthTokenSecret) {
-          const res = await this.$axios.post(`${process.env.apiUrl}/req2acc`, {
+          this.$axios.setHeader("Token", localStorage.getItem("secretToken"))
+          const res = await this.$axios.post(`/api/req2acc`, {
             oauth_token: oauthToken,
             oauth_verifier: oauthVerifier,
             oauth_token_secret: oauthTokenSecret

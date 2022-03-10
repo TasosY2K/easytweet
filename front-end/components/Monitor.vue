@@ -21,7 +21,8 @@ export default {
         async fetchThreads() {
             this.spanText = "Loading running threads..."
             try {
-                const res = await this.$axios.get(`${process.env.apiUrl}/monitor`);
+                this.$axios.setHeader("Token", localStorage.getItem("secretToken"))
+                const res = await this.$axios.get(`/api/monitor`);
                 if (res.status == 200) {
                     this.threadsRunning = true
                     this.threads = res.data;

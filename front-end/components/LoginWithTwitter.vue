@@ -15,21 +15,23 @@ export default {
     name: 'LoginWithTwitter',
     methods: {
         async loginWithTwitter() {
-            const res = await this.$axios.get(`${process.env.apiUrl}/req4req`);
+            const res = await this.$axios.get(`/api/req4req`);
             const oauthToken = res.data.oauth_token;
             const oauthTokenSecret = res.data.oauth_token_secret;
             localStorage.setItem("oauthTokenSecret", oauthTokenSecret);
             window.location.href = `https://api.twitter.com/oauth/authorize?oauth_token=${oauthToken}`;
         },
         async checkToken() {
-            this.$axios.setHeader("Authorization", this.secretToken)
-            
+            localStorage.removeItem("secretToken")
+            this.$axios.setHeader("Token", this.secretToken)
+
             try {
-                const res = await this.$axios.get(`${process.env.apiUrl}/`);
+                const res = await this.$axios.get(`/api/`);
 
                 if (res.status == 200) {
                     this.secretTokenValidated = true
                     this.buttonDisabled = false
+                    localStorage.setItem("secretToken", this.secretToken);
                 } else {
                     this.secretTokenValidated = false
                     this.buttonDisabled = true
@@ -47,6 +49,6 @@ export default {
             secretTokenValidated: false,
             buttonDisabled: true
         }
-    }
+    },
 }
 </script>

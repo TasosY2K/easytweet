@@ -35,11 +35,11 @@ client = MongoClient(
 
 db = client[os.getenv("DB_AUTH_DB")]
 
-def start_stream(identity, collection_name, hashtags, datetime_end):
+def start_stream(access_token, access_token_secret, identity, collection_name, hashtags, datetime_end):
     while True:
         try:
             auth = tweepy.OAuthHandler(os.getenv("OAUTH_TOKEN"), os.getenv("OAUTH_TOKEN_SECRET"))
-            auth.set_access_token(os.getenv("ACCESS_TOKEN"), os.getenv("ACCESS_TOKEN_SECRET"))
+            auth.set_access_token(access_token, access_token_secret)
             
             listener = StreamListener(
                 identity=identity,
@@ -58,14 +58,17 @@ def start_stream(identity, collection_name, hashtags, datetime_end):
 
 @app.before_request
 def middlware():
-    if "Authorization" in request.headers:
-        server_token = os.getenv("HEADER_SECRET")
-        client_token = request.headers.get("Authorization")
-        print(client_token)
-        if client_token != server_token:
-            return "Incorrect token verification", 401
+    if not "Token" in request.headers:
+        return "Token header is required", 401
+
+    server_token = os.getenv("HEADER_SECRET")
+    client_token = request.headers.get("Token")
+    
+    if client_token == server_token:
+        pass
     else:
-        return "Incorrect token verification", 401
+        return "Invalid token", 401
+
 
 @app.route("/", methods=["GET"])
 def index():
@@ -119,11 +122,11 @@ def req2acc():
 def collect():
     body = request.get_json()
     
-    if not "collection_name" in body or not "hashtags" in body or not "datetime_end" in body:
+    if not "access_token" in body or not "access_token_secret" in body or not "collection_name" in body or not "hashtags" in body or not "datetime_end" in body:
         return "Not enough or wrong arguments", 401
 
     if body["collection_name"] in db.list_collection_names():
-        return "Collection already exists", 401
+        return "Collection already exists", 203
 
     identity = str(uuid.uuid4())[:8]
 
@@ -131,6 +134,8 @@ def collect():
         target=start_stream,
         daemon=True,
         args=(
+            body["access_token"],
+            body["access_token_secret"],
             identity,
             body["collection_name"], 
             body["hashtags"], 
