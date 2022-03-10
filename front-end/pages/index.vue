@@ -1,26 +1,43 @@
 <template>
   <div class="container">
-      <div v-if="authenticated == null" class="spinner-cls">
-        <b-spinner class="spinner-border text-light"></b-spinner>
-      </div>
-      <div v-else class="center">
-        <div class="row">
-          <div class="col-md-6 offset-md-3">
-            <LoginWithTwitter v-if="authenticated == false" />
-            <div v-else-if="authenticated" >
-              <div class="mb-2">
-                <b-button @click="componentViewHandler('collector')" variant="primary" class="nav-button mr-1">Data collection</b-button>
-                <b-button @click="componentViewHandler('monitor')" variant="primary" class="nav-button mr-1">Monitor</b-button>
-                <b-button @click="componentViewHandler('logs')" variant="primary" class="nav-button mr-1">Logs</b-button>
-                <b-button @click="logout()" class="nav-button" variant="primary">Logout</b-button>
-              </div>
-              <DataCollector v-if="componentView == 'collector'"/>
-              <Monitor v-else-if="componentView == 'monitor'"/>
-              <Logs v-else-if="componentView == 'logs'" />
+    <div v-if="authenticated == null" class="spinner-cls">
+      <b-spinner class="spinner-border text-light"></b-spinner>
+    </div>
+    <div v-else class="center">
+      <div class="row">
+        <div class="col-md-6 offset-md-3">
+          <LoginWithTwitter v-if="authenticated == false" />
+          <div v-else-if="authenticated">
+            <div class="mb-2">
+              <b-button
+                @click="componentViewHandler('collector')"
+                variant="primary"
+                class="nav-button mr-1"
+                >Data collection</b-button
+              >
+              <b-button
+                @click="componentViewHandler('monitor')"
+                variant="primary"
+                class="nav-button mr-1"
+                >Monitor</b-button
+              >
+              <b-button
+                @click="componentViewHandler('logs')"
+                variant="primary"
+                class="nav-button mr-1"
+                >Logs</b-button
+              >
+              <b-button @click="logout()" class="nav-button" variant="primary"
+                >Logout</b-button
+              >
             </div>
+            <DataCollector v-if="componentView == 'collector'" />
+            <Monitor v-else-if="componentView == 'monitor'" />
+            <Logs v-else-if="componentView == 'logs'" />
           </div>
         </div>
-      </div>        
+      </div>
+    </div>
     <div class="footer">© Datalab, Aristotle Uni. of Thessaloniki</div>
   </div>
 </template>
@@ -28,22 +45,23 @@
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Lato&display=swap');
 
-.btn:focus,.btn:active {
-   outline: none !important;
-   box-shadow: none;
+.btn:focus,
+.btn:active {
+  outline: none !important;
+  box-shadow: none;
 }
 
-textarea:focus, 
-textarea.form-control:focus, 
-input.form-control:focus, 
-input[type=text]:focus, 
-input[type=password]:focus, 
-input[type=email]:focus, 
-input[type=number]:focus, 
-[type=text].form-control:focus, 
-[type=password].form-control:focus, 
-[type=email].form-control:focus, 
-[type=tel].form-control:focus, 
+textarea:focus,
+textarea.form-control:focus,
+input.form-control:focus,
+input[type='text']:focus,
+input[type='password']:focus,
+input[type='email']:focus,
+input[type='number']:focus,
+[type='text'].form-control:focus,
+[type='password'].form-control:focus,
+[type='email'].form-control:focus,
+[type='tel'].form-control:focus,
 [contenteditable].form-control:focus {
   box-shadow: inset 0 -1px 0 #ddd;
 }
@@ -98,35 +116,35 @@ body {
 </style>
 
 <script>
-import LoginWithTwitter from "../components/LoginWithTwitter.vue";
-import DataCollector from '../components/DataCollector.vue';
-import Monitor from '../components/Monitor.vue';
+import LoginWithTwitter from '../components/LoginWithTwitter.vue'
+import DataCollector from '../components/DataCollector.vue'
+import Monitor from '../components/Monitor.vue'
 export default {
   components: { LoginWithTwitter, DataCollector, Monitor },
   name: 'IndexPage',
   methods: {
     logout() {
-      localStorage.removeItem("userInfo");
-      localStorage.removeItem("secretToken");
-      window.location.href = "/";
+      localStorage.removeItem('userInfo')
+      localStorage.removeItem('secretToken')
+      window.location.href = '/'
     },
     componentViewHandler(view) {
-        this.componentView = view;
-    }
+      this.componentView = view
+    },
   },
   data() {
     return {
       authenticated: null,
-      componentView: "collector",
+      componentView: 'collector',
     }
   },
   mounted() {
-    const userInfo = localStorage.getItem("userInfo");
+    const userInfo = localStorage.getItem('userInfo')
     if (userInfo && userInfo.length > 0 && Object.keys(userInfo).length !== 0) {
-      this.authenticated = true;
+      this.authenticated = true
     } else {
-      this.authenticated = false;
+      this.authenticated = false
     }
-  }
+  },
 }
 </script>
